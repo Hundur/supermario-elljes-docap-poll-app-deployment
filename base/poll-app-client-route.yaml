@@ -1,0 +1,28 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: polling-app-client
+spec:
+  host: elljes-polling-app-client.docap-avella-16fc47728e8aae593a5208221954defe-0000.eu-gb.containers.appdomain.cloud
+  to:
+    kind: Service
+    name: polling-app-client
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: polling-app-server
+spec:
+  host: elljes-polling-app-client.docap-avella-16fc47728e8aae593a5208221954defe-0000.eu-gb.containers.appdomain.cloud
+  path: /api
+  to:
+    kind: Service
+    name: polling-app-server
+  port:
+    targetPort: http
+  tls:
+    termination: edge

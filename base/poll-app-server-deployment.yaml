@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: polling-app-server
+  name: polling-app-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: polling-app-server
+  template:
+    metadata:
+      labels:
+        app: polling-app-server
+    spec:
+      containers:
+      - env:
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: database-user
+              name: polling-app-mysql
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-password
+              name: polling-app-mysql
+        - name: SPRING_DATASOURCE_URL
+          valueFrom:
+            secretKeyRef:
+              key: database-url
+              name: polling-app-mysql
+        image: quay.io/elljes/poll-app-server:0.1
+        imagePullPolicy: IfNotPresent
+        name: polling-app-server
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /api/polls?page=0&size=30
+            port: http
+          initialDelaySeconds: 265
+          periodSeconds: 3
+        resources:
+          limits:
+            cpu: 0.2
+            memory: 300Mi
+      imagePullSecrets:
+      - name: elljes-docap-pull-secret

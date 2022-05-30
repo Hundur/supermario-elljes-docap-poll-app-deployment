@@ -1,0 +1,104 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: polling-app-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 250Mi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: polling-app-mysql
+type: Opaque
+stringData:
+  database-name: polls
+  database-password: 4g00ds3cr3t
+  database-root-password: gr4atp4ssw0rd
+  database-user: pollsdbadmin
+  database-url: jdbc:mysql://polling-app-mysql:3306/polls?useSSL=false&serverTimezone=UTC&useLegacyDatetimeCode=false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: polling-app-mysql
+  labels:
+    app: polling-app
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: polling-app-mysql
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: polling-app-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: polling-app-mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: polling-app-mysql
+    spec:
+      containers:
+      - env:
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              key: database-user
+              name: polling-app-mysql
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-password
+              name: polling-app-mysql
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-root-password
+              name: polling-app-mysql
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              key: database-name
+              name: polling-app-mysql
+        image: 'image-registry.openshift-image-registry.svc:5000/openshift/mysql'
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          initialDelaySeconds: 30
+          tcpSocket:
+            port: 3306
+          timeoutSeconds: 1
+        name: mysql
+        ports:
+        - containerPort: 3306
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -i
+            - -c
+            - MYSQL_PWD="$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+        resources:
+          limits:
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /var/lib/mysql/data
+          name: polling-app-mysql-data
+      volumes:
+      - name: polling-app-mysql-data
+        persistentVolumeClaim:
+          claimName: polling-app-pvc
