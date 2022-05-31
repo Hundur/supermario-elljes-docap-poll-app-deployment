@@ -1,9 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 bases:
 - ../base
 images:
 - name: quay.io/elljes/poll-app-server
   newTag: "0.1"
 - name: quay.io/elljes/poll-app-client
-  newTag: "0.2"
+  newTag: 5d12dda2f071e40d2daefd86c636e31a42898b53
+kind: Kustomization
