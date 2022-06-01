@@ -5,5 +5,5 @@ images:
 - name: quay.io/elljes/poll-app-server
   newTag: "0.1"
 - name: quay.io/elljes/poll-app-client
-  newTag: dbd5b2539221d090a82271548311ca46e10b1bfa
+  newTag: ad9f74b86537543229e9e5a9763dea34f762302d
 kind: Kustomization
